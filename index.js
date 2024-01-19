@@ -27,13 +27,24 @@ const DEFAULT_TEXT_OPTIONS = {
     errorOpenTwice: "Cannot open the contact selector twice",
 }
 
+let currentlyOpen = false;
+
 const SelectContactApi = {
-    selectContact(textOptions=DEFAULT_TEXT_OPTIONS) {
+    selectContact() {
+        if (Platform.OS !== 'ios' && currentlyOpen) {
+            return Promise.reject(new Error('Cannot open the contact selector twice'));
+        }
+
+        currentlyOpen = true;
+
         return SelectContact.openContactSelection()
             .then(contact => {
+                currentlyOpen = false;
                 return contact;
             })
             .catch(err => {
+                currentlyOpen = false;
+
                 // Resolve to null when cancelled
                 if (err.code === 'E_CONTACT_CANCELLED') {
                     return null;
